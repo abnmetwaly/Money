@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Money</title>
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--text:#14201d;--muted:#6b7a76;--brand:#0f766e;--bt:#fff;--danger:#c0392b;--line:#dde4e1;--ok:#0f766e;--tint:rgba(0,0,0,0);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1514;--card:#192220;--text:#e8f0ee;--muted:#93a39f;--brand:#14b8a6;--bt:#04201c;--danger:#ff7b6b;--line:#2a3633;--ok:#2dd4bf}}
+:root[data-theme="dark"]{--bg:#0f1514;--card:#192220;--text:#e8f0ee;--muted:#93a39f;--brand:#14b8a6;--bt:#04201c;--danger:#ff7b6b;--line:#2a3633;--ok:#2dd4bf}
+*{box-sizing:border-box}
+html,body{margin:0;color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial,sans-serif}
+body{min-height:100vh;background-color:var(--bg);background-image:linear-gradient(var(--tint),var(--tint));background-attachment:fixed;transition:background .5s}
+.app{max-width:480px;margin:0 auto;padding:0 14px 170px}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 2px}
+h1{margin:0;font-size:24px}h2{font-size:17px;margin:0 0 10px}
+button{font:inherit;cursor:pointer;border:0;border-radius:12px;color:inherit}
+.btn{background:var(--brand);color:var(--bt);padding:10px 16px;font-weight:700}
+.btn.ghost{background:transparent;color:var(--brand);border:1.5px solid var(--brand)}
+.card{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;border:1px solid var(--line)}
+input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--line);background:var(--bg);color:var(--text);outline:none}
+input:focus{border-color:var(--brand)}
+.row{display:flex;gap:8px;margin-bottom:8px}.amt{flex:0 0 38%}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.nav button{background:var(--bg);width:40px;height:40px;font-size:18px}
+.nav b{font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dn{text-align:center;font-size:12px;color:var(--muted);padding:2px 0}
+.cell{aspect-ratio:1/1.08;background:var(--bg);border:1.5px solid transparent;border-radius:10px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:14px}
+.cell small{font-size:10px;color:var(--danger);font-weight:700;min-height:12px}
+.cell.today{border-color:var(--brand);font-weight:800}
+.cell.sel{background:var(--brand);color:var(--bt)}.cell.sel small{color:var(--bt)}
+.cell.empty{background:transparent;pointer-events:none}
+.item{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}.item .a{font-weight:700;min-width:80px;color:var(--danger)}.item .r{flex:1}
+.x{background:transparent;color:var(--muted);font-size:20px;padding:4px 10px}
+.note{color:var(--muted);text-align:center;padding:8px;font-size:14px}
+.bar{position:fixed;inset:auto 0 0 0;background:var(--card);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+.bar .in{max-width:480px;margin:0 auto}
+.bar .main{display:flex;justify-content:space-between;font-weight:800;font-size:19px}
+.bar .sub{display:flex;justify-content:space-between;color:var(--muted);font-size:13px;margin-top:4px}
+#status{font-weight:700;margin-top:4px;font-size:14px}
+.hide{display:none}.lbl{font-size:13px;color:var(--muted);margin:10px 0 6px}
+</style>
+</head>
+<body>
+<div class="app">
+<header><h1>💰 Money</h1><button class="btn ghost" id="advBtn">متقدم ⚙</button></header>
+
+<div class="card hide" id="adv">
+  <h2>الرواتب 🔒</h2>
+  <div id="salList"></div>
+  <div class="row" style="margin-top:8px"><input id="newSal" type="number" inputmode="decimal" placeholder="اكتب الراتب"><button class="btn" id="addSal">إضافة</button></div>
+  <div class="note" style="text-align:right;padding:0">أى مبلغ بيتسجل بيتقفل ومش بيتعدل ولا بيتمسح. لو وصلتك فلوس تانية ضيفها فى خانة جديدة.</div>
+  <div class="lbl">مبلغ التخزين (يتشال من أول الشهر)</div>
+  <input id="saving" type="number" inputmode="decimal" placeholder="مبلغ التخزين آخر الشهر">
+</div>
+
+<div class="card">
+  <div class="nav"><button id="nx">›</button><b id="mt"></b><button id="pv">‹</button></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<div class="card">
+  <h2 id="dt"></h2>
+  <div id="form">
+    <div class="row">
+      <input id="expAmt" class="amt" type="number" inputmode="decimal" placeholder="المبلغ">
+      <input id="expWhy" type="text" placeholder="سبب المصروف">
+    </div>
+    <button class="btn" id="addExp" style="width:100%;margin-bottom:8px">إضافة مصروف</button>
+  </div>
+  <div id="lock" class="note hide">الإضافة والتعديل متاحين لليوم الحالى بس</div>
+  <div id="expList"></div>
+</div>
+</div>
+
+<div class="bar"><div class="in">
+  <div class="main"><span>المتبقى</span><span id="rem">0</span></div>
+  <div id="status"></div>
+  <div class="sub"><span>مسموح يوميًا: <b id="dly">0</b></span><span>مصاريف الشهر: <b id="tExp">0</b></span></div>
+</div></div>
+
+<script>
+var KEY="money_app_v2",DN=["سبت","أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة"];
+var st={salaries:[""],saving:"",expenses:{}};
+try{var s=JSON.parse(localStorage.getItem(KEY)||"null");
+if(s&&s.expenses)st=s;else{var o=JSON.parse(localStorage.getItem("money_app_v1")||"null");if(o&&o.salaries)st.salaries=o.salaries}}catch(e){}
+st.salaries=(st.salaries||[]).map(function(v){return parseFloat(v)||0}).filter(function(v){return v>0});
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function num(v){var n=parseFloat(v);return isNaN(n)?0:n}
+function fmt(n){return Math.round(n*100)/100+""===""?"0":n.toLocaleString("ar-EG",{maximumFractionDigits:2})+" ج.م"}
+function p2(n){return(n<10?"0":"")+n}
+function key(y,m,d){return y+"-"+p2(m+1)+"-"+p2(d)}
+function todayKey(){var t=new Date();return key(t.getFullYear(),t.getMonth(),t.getDate())}
+var T=new Date(),vy=T.getFullYear(),vm=T.getMonth(),tk=todayKey(),sel=tk;
+function dim(y,m){return new Date(y,m+1,0).getDate()}
+function dayTotal(k){return(st.expenses[k]||[]).reduce(function(a,e){return a+num(e.amt)},0)}
+function spentTo(y,m,d){var t=0;for(var i=1;i<=d;i++)t+=dayTotal(key(y,m,i));return t}
+function sal(){return st.salaries.reduce(function(a,b){return a+num(b)},0)}
+
+function renderCal(){
+  $("mt").textContent=new Date(vy,vm,1).toLocaleDateString("ar-EG",{month:"long",year:"numeric"});
+  var g=$("grid");g.innerHTML="";
+  DN.forEach(function(n){var d=document.createElement("div");d.className="dn";d.textContent=n;g.appendChild(d)});
+  var off=(new Date(vy,vm,1).getDay()+1)%7;
+  for(var i=0;i<off;i++){var e=document.createElement("div");e.className="cell empty";g.appendChild(e)}
+  for(var d=1;d<=dim(vy,vm);d++){(function(d){
+    var k=key(vy,vm,d),c=document.createElement("button");
+    c.className="cell"+(k===tk?" today":"")+(k===sel?" sel":"");
+    var t=dayTotal(k);
+    c.innerHTML=d.toLocaleString("ar-EG")+"<small>"+(t?Math.round(t).toLocaleString("ar-EG"):"")+"</small>";
+    c.onclick=function(){sel=k;renderAll()};g.appendChild(c)})(d)}
+}
+function renderDay(){
+  var p=sel.split("-"),dt=new Date(+p[0],+p[1]-1,+p[2]);
+  $("dt").textContent=dt.toLocaleDateString("ar-EG",{weekday:"long",day:"numeric",month:"long"})+(sel===tk?" (النهاردة)":"");
+  var can=sel===tk;
+  $("form").classList.toggle("hide",!can);$("lock").classList.toggle("hide",can);
+  var box=$("expList");box.innerHTML="";var L=st.expenses[sel]||[];
+  if(!L.length){box.innerHTML='<div class="note">مفيش مصاريف فى اليوم ده</div>';return}
+  L.forEach(function(e,i){
+    var d=document.createElement("div");d.className="item";
+    d.innerHTML='<span class="a"></span><span class="r"></span>';
+    d.children[0].textContent="−"+fmt(num(e.amt));d.children[1].textContent=e.why||"بدون سبب";
+    if(can){var x=document.createElement("button");x.className="x";x.textContent="✕";
+      x.onclick=function(){L.splice(i,1);if(!L.length)delete st.expenses[sel];save();renderAll()};d.appendChild(x)}
+    box.appendChild(d)})
+}
+function renderTotals(){
+  var net=sal()-num(st.saving),dm=dim(vy,vm),daily=net/dm;
+  var cur=(vy===T.getFullYear()&&vm===T.getMonth()),past=(vy<T.getFullYear()||(vy===T.getFullYear()&&vm<T.getMonth()));
+  var spent=spentTo(vy,vm,dm),rem=net-spent;
+  $("rem").textContent=fmt(rem);$("rem").style.color=rem<0?"var(--danger)":"var(--ok)";
+  $("dly").textContent=fmt(daily>0?daily:0);$("tExp").textContent=fmt(spent);
+  var tint="rgba(0,0,0,0)",msg="";
+  if(cur&&daily>0){
+    var d=T.getDate(),dev=spentTo(vy,vm,d)-daily*d,tol=daily*0.02,r=Math.abs(dev)/daily;
+    var a=Math.min(.3,.04+.18*r).toFixed(3);
+    if(dev>tol){tint="rgba(220,60,50,"+a+")";msg="⚠ صرفت أكتر من المسموح لحد النهاردة بـ "+fmt(dev)}
+    else if(dev<-tol){tint="rgba(40,170,100,"+a+")";msg="✔ ماشى كويس، وفّرت "+fmt(-dev)+" عن المسموح"}
+    else msg="ماشى مظبوط على الميزانية"
+  }else if(cur)msg="حدد الراتب من «متقدم» عشان تتحسب الميزانية";
+  document.documentElement.style.setProperty("--tint",tint);
+  $("status").textContent=msg;
+  $("status").style.color=tint.indexOf("220")>0?"var(--danger)":"var(--ok)";
+}
+function renderSal(){
+  var box=$("salList");box.innerHTML="";
+  st.salaries.forEach(function(v,i){
+    var d=document.createElement("div");d.className="item";
+    d.innerHTML='<span class="r"></span><span class="a" style="color:var(--ok)"></span>';
+    d.children[0].textContent=(i?"مبلغ إضافى "+i:"الراتب")+" 🔒";d.children[1].textContent=fmt(v);
+    box.appendChild(d)});
+  $("newSal").placeholder=st.salaries.length?"مبلغ إضافى جديد":"اكتب الراتب";
+}
+function renderAll(){renderCal();renderDay();renderTotals()}
+$("advBtn").onclick=function(){$("adv").classList.toggle("hide")};
+$("addSal").onclick=function(){var v=num($("newSal").value);if(v<=0){$("newSal").focus();return}
+  st.salaries.push(v);$("newSal").value="";save();renderSal();renderTotals()};
+$("saving").value=st.saving;$("saving").oninput=function(){st.saving=this.value;save();renderTotals()};
+$("pv").onclick=function(){vm--;if(vm<0){vm=11;vy--}renderAll()};
+$("nx").onclick=function(){vm++;if(vm>11){vm=0;vy++}renderAll()};
+$("addExp").onclick=function(){
+  var a=num($("expAmt").value);if(a<=0){$("expAmt").focus();return}
+  (st.expenses[tk]=st.expenses[tk]||[]).push({amt:a,why:$("expWhy").value.trim()});
+  $("expAmt").value="";$("expWhy").value="";save();renderAll();$("expAmt").focus()};
+function roll(){var k=todayKey();if(k!==tk){tk=k;T=new Date();sel=k;vy=T.getFullYear();vm=T.getMonth();renderAll()}}
+document.addEventListener("visibilitychange",function(){if(!document.hidden)roll()});
+setInterval(roll,60000);
+async function setupReminder(){
+  var C=window.Capacitor,LN=C&&C.Plugins&&C.Plugins.LocalNotifications;
+  if(!LN)return;
+  try{
+    var p=await LN.checkPermissions();
+    if(p.display!=="granted")p=await LN.requestPermissions();
+    if(p.display!=="granted")return;
+    try{await LN.createChannel({id:"daily",name:"تذكير المصاريف",importance:4,visibility:1})}catch(e){}
+    await LN.cancel({notifications:[{id:1}]});
+    await LN.schedule({notifications:[{id:1,title:"Money 💰",body:"سجلت مصاريف النهاردة؟ اضغط وضيف اللى نسيته",channelId:"daily",schedule:{on:{hour:23,minute:50},allowWhileIdle:true}}]});
+  }catch(e){}
+}
+setupReminder();
+renderSal();renderAll();
+</script>
+</body>
+</html>
